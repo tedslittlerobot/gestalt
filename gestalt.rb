@@ -16,9 +16,22 @@ class Gestalt
     end
 
     # Set up port forwarding
+    global_pf = 'echo "'
     settings["ports"].each do |port|
       config.vm.network "forwarded_port", guest: port["guest"], host: port["host"]
+
+      # If the global key is set, and it's either true, or an integer
+      if port.has_key?("global") && ( port["global"].is_a? Integer || port["global"] )
+        # forward from the given port if it's an integer, or match the guest port otherwise
+        config_pf += 'rdr pass on lo0 inet proto tcp from any to 127.0.0.1 port ' + port["global"].is_a? Integer ? port["global"] : port["guest"] + ' -> 127.0.0.1 port ' + port["host"] + "\n"
+      end
     end
+
+    # run the port forwarding
+    config.trigger.after [:provision, :up, :reload] do
+      system('echo "' + global_pf + '" | sudo pfctl -f - > /dev/null 2>&1')
+    end
+
 
     # Configure The Public Key For SSH Access
     config.vm.provision "shell" do |s|
