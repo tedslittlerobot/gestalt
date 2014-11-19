@@ -24,8 +24,10 @@ variables:
 ports:
     - host: 8000
       guest: 80
+      global: 80
     - host: 33060
       guest: 3306
+      global: 3306
     - host: 92000
       guest: 9200
     - host: 10801
